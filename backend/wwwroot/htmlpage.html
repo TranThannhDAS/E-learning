@@ -1,0 +1,72 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Exam</title>
+    <!-- Thêm thư viện SignalR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.11/signalr.min.js"></script>
+</head>
+<body>
+    <h1>Online Exam</h1>
+    <div>
+        <h2>Time Remaining:</h2>
+        <p id="examTimer">00:00</p>
+    </div>
+    <!-- Thêm nút để bắt đầu kỳ thi -->
+    <button onclick="startExam(5)">Start Exam</button> <!-- Giả sử examId là 5 -->
+    <button onclick="endExam(5)">End Exam</button>
+
+    <script>
+        let connection; // Khai báo biến connection ở cấp độ toàn cục
+
+        function startExam(examId) {
+            // Khởi tạo kết nối SignalR chỉ khi bắt đầu kỳ thi
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl("/examHub")
+                .build();
+
+            connection.on("ReceiveTimeUpdate", function (time) {
+                var examTimer = document.getElementById("examTimer");
+                examTimer.innerText = time;
+            });
+
+            connection.on("ReceiveExamEnd", function () {
+                alert("Your exam has ended.");
+                connection.stop(); // Ngắt kết nối khi kỳ thi kết thúc
+            });
+
+            connection.start()
+                .then(function () {
+                    fetch(`/api/exam/start/${examId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => console.log(data))
+                        .catch(error => console.error('Error:', error));
+                })
+                .catch(err => console.error('Connection failed: ', err));
+        }
+
+        function endExam(examId) {
+            fetch(`/api/exam/end/${examId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    if (connection) {
+                        connection.stop();
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>

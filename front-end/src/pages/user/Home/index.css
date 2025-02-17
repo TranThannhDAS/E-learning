@@ -1,0 +1,50 @@
+.results {
+    margin-top: 20px; 
+    display: flex;
+    flex-direction: column;
+    width: 513px;
+    max-height: 400px; 
+    overflow-y: auto; 
+    border: 1px solid #ddd; 
+    border-radius: 5px; 
+    padding: 10px; 
+}
+
+.result-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px; 
+    padding: 10px;
+    border: 1px solid #ddd; 
+    border-radius: 5px;
+    background-color: #f9f9f9; 
+    transition: background-color 0.3s;
+}
+
+.result-item:hover {
+    background-color: #f1f1f1;
+}
+
+.thumbnail {
+    width: 50px;
+    height: 50px; 
+    border-radius: 50%; 
+    margin-right: 10px; 
+}
+
+.title {
+    flex-grow: 1; 
+    overflow: hidden;
+    white-space: nowrap; 
+    text-overflow: ellipsis; 
+}
+
+.highlight {
+    font-weight: bold;
+}
+
+  .CustomeBox {
+    align-items: center;
+    flex-direction: column;
+  }
+  

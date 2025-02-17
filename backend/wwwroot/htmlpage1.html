@@ -1,0 +1,129 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Exam SignalR Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.9/signalr.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        #status {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <h2>Exam Management SignalR Hub Test</h2>
+    <button id="startExam">Start Exam</button>
+    <button id="endExam">End Exam</button>
+    <button id="disconnect">Disconnect</button>
+    <div id="status"></div>
+    <div id="time"></div>
+
+    <script>
+        let connection = null;
+
+        function setupSignalRConnection() {
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl("/examHub") // Update this with your actual SignalR Hub URL
+                .configureLogging(signalR.LogLevel.Information)
+                .build();
+
+            connection.on("ReceiveTimeUpdate", function (time) {
+                document.getElementById('time').textContent = "Remaining Time: " + time;
+            });
+
+            connection.on("ReceiveExamEnd", function () {
+                document.getElementById('time').textContent = "Exam Ended";
+                document.getElementById('status').textContent = "Disconnected";
+                connection.stop();
+            });
+
+            connection.start().then(function () {
+                console.log("SignalR Connected.");
+                document.getElementById('status').textContent = "Connected to Hub";
+                startExam(); // Call start exam after successful connection
+            }).catch(function (err) {
+                console.log(err);
+                setTimeout(setupSignalRConnection, 5000); // Retry connection
+            });
+        }
+        function disconnectSignalR() {
+            if (connection && connection.state === signalR.HubConnectionState.Connected) {
+                connection.stop().then(() => {
+                    document.getElementById('status').textContent = "Disconnected from Hub";
+                    console.log("SignalR Disconnected.");
+                }).catch(err => {
+                    console.error('Error disconnecting from SignalR: ', err.toString());
+                });
+            } else {
+                console.error("SignalR connection is not established.");
+            }
+        }
+
+        function startExam() {
+            if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+                setupSignalRConnection();
+            } else {
+                invokeStartExam();
+            }
+        }
+
+        function invokeStartExam() {
+            let examId = 3; // Adjust exam ID as necessary
+            connection.invoke("StartExam", examId)
+                .then(() => {
+                    document.getElementById('status').textContent = "Exam started";
+                })
+                .catch(err => {
+                    console.error(err.toString());
+                });
+        }
+        function endExam() {
+            let examId = 3; // Adjust exam ID as necessary
+            fetch(`/api/exam/end/${examId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(data);
+                    document.getElementById('status').textContent = "Exam ended: " + data.message;
+                })
+                .catch(err => {
+                    console.error('Error calling EndExam: ', err.toString());
+                    document.getElementById('status').textContent = "Error ending exam: " + err;
+                });
+        }
+
+        document.getElementById("startExam").addEventListener("click", function () {
+            
+                startExam();
+            
+        });
+
+        document.getElementById("endExam").addEventListener("click", function () {
+            if (connection && connection.state === signalR.HubConnectionState.Connected) {
+                endExam();
+            } else {
+                console.error("SignalR connection is not established.");
+            }
+        });
+        document.getElementById("disconnect").addEventListener("click", function () {
+            disconnectSignalR();
+        });
+        // Setup SignalR connection on page load
+        //setupSignalRConnection();
+    </script>
+</body>
+</html>
