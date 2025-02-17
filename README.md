@@ -3,12 +3,6 @@
 
 ### Cách chạy dự án khi lần đầu tiên clone về
 
-- Đầu tiên là clone bằng lệnh:
-
-```github
-// Nhớ là phải có ssh rồi
-git clone git@github.com:Eprojectt3/Eproject31.git
-```
 
 - Sau khi clone về rồi thì checkout sang nhánh develop bằng lệnh
 
